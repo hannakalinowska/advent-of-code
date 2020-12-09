@@ -1,25 +1,24 @@
 #! /usr/bin/env ruby
 
-LENGTH = 25
+NUMBER = 21806024
 
 inputs = File.read('09-input.txt').split.map(&:to_i)
 
-def valid?(number, items)
-  items.find do |i|
-    items.include?(number - i)
-  end
-end
-
 from = 0
+length = 1
 
 loop do
-  number = inputs[from + LENGTH]
-  items = inputs[from, LENGTH]
+  items = inputs[from, length]
+  sum = items.reduce(&:+)
 
-  if valid?(number, items)
-    from += 1
-  else
-    puts number
+  case
+  when sum == NUMBER
+    puts items.max + items.min
     exit
+  when sum > NUMBER
+    from += 1
+    length -= 1
+  when sum < NUMBER
+    length += 1
   end
 end
