@@ -7,13 +7,34 @@ inputs << (inputs.max + 3)
 
 inputs.sort!
 
-diffs = (1 .. inputs.size - 1).reduce({}) do |acc, i|
-  diff = inputs[i] - inputs[i-1]
+#inputs = [0, 1, 2, 3, 4, 5]
 
-  acc[diff] ||= 0
-  acc[diff] += 1
-  acc
+tree = {}
+$temp_tree = {}
+
+inputs.each_with_index do |input, i|
+  tree[input] = []
+  tree[input] << inputs[i+1] if inputs[i+1] && inputs[i] + 3 >= inputs[i+1]
+  tree[input] << inputs[i+2] if inputs[i+2] && inputs[i] + 3 >= inputs[i+2]
+  tree[input] << inputs[i+3] if inputs[i+3] && inputs[i] + 3 >= inputs[i+3]
 end
 
-puts diffs.inspect
-puts diffs[1]*diffs[3]
+def traverse(i, tree)
+  #puts i.inspect
+  if tree[i].empty?
+    return 1
+  else
+    tree[i].map { |n|
+      if $temp_tree[n]
+        count = $temp_tree[n]
+      else
+        count = traverse(n, tree)
+        $temp_tree[n] = count
+      end
+      count
+    }.reduce(&:+)
+  end
+end
+
+result = traverse(0, tree)
+puts result
