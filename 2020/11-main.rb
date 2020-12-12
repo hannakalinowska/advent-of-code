@@ -1,20 +1,121 @@
 #! /usr/bin/env ruby
 
 inputs = File.read('11-input.txt').split.map { |l| l.split('') }
-#inputs = inputs[0..5].map{|l| l[0..5]}
+inputs = inputs[0..5].map{|l| l[0..5]}
+
+# we're going to try to use pointers in this whole thing.
+def top(i, j, seating)
+  j.upto(0) {
+    if seating[i][j] != '.'
+      return seating[i][j]
+    end
+  }
+  nil
+end
+
+def topright(i, j, seating)
+  loop do
+    return nil if j < 0
+    return nil if i >= seating.first.length
+
+    if seating[i][j] != '.'
+      return seating[i][j]
+    end
+
+    i += 1
+    j -= 1
+  end
+end
+
+def right(i, j, seating)
+  loop do
+    return nil if i >= seating.first.length
+
+    if seating[i][j] != '.'
+      return seating[i][j]
+    end
+
+    i += 1
+  end
+end
+
+def bottomright(i, j, seating)
+  loop do
+    return nil if j >= seating.length
+    return nil if i >= seating.first.length
+
+    if seating[i][j] != '.'
+      return seating[i][j]
+    end
+
+    i += 1
+    j += 1
+  end
+end
+
+def bottom(i, j, seating)
+  loop do
+    return nil if j >= seating.length
+
+    if seating[i][j] != '.'
+      return seating[i][j]
+    end
+
+    j += 1
+  end
+end
+
+def bottomleft(i, j, seating)
+  loop do
+    return nil if j >= seating.length
+    return nil if i < 0
+
+    if seating[i][j] != '.'
+      return seating[i][j]
+    end
+
+    i -= 1
+    j += 1
+  end
+end
+
+def left(i, j, seating)
+  loop do
+    return nil if i < 0
+
+    if seating[i][j] != '.'
+      return seating[i][j]
+    end
+
+    i -= 1
+  end
+end
+
+def topleft(i, j, seating)
+  loop do
+    return nil if j < 0
+    return nil if i < 0
+
+    if seating[i][j] != '.'
+      return seating[i][j]
+    end
+
+    i -= 1
+    j -= 1
+  end
+end
 
 def count_occupied(i, j, seating)
-  count = 0
-  (i-1 .. i+1).each do |x|
-    next if seating[x].nil?
-    (j-1 .. j+1).each do |y|
-      next if x < 0 || y < 0
-
-      count += 1 if seating[x][y] == '#'
-    end
-  end
-  count -= 1 if seating[i][j] == '#'
-  count
+  [
+    top(i, j, seating),
+    topright(i, j, seating),
+    right(i, j, seating),
+    bottomright(i, j, seating),
+    bottom(i, j, seating),
+    bottomleft(i, j, seating),
+    left(i, j, seating),
+    topleft(i, j, seating),
+  ].map {|seat| seat == '#' ? 1 : 0}.reduce(&:+)
 end
 
 def step(seating)
@@ -29,7 +130,7 @@ def step(seating)
       case
       when seat == 'L' && occupied_seats == 0
         new_seating[i][j] = '#'
-      when seat == '#' && occupied_seats >= 4
+      when seat == '#' && occupied_seats >= 5
         new_seating[i][j] = 'L'
       else
         new_seating[i][j] = seat
@@ -47,7 +148,7 @@ iterations = 0
 loop do
   puts iterations if iterations % 100 == 0
   new = step(old)
-  require 'pry'; binding.pry if old == new
+  require 'pry'; binding.pry #if old == new
   count = 0
   if old == new
     new.each do |l|
