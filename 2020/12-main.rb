@@ -9,35 +9,34 @@ inputs = File.read('12-input.txt').split
 #'F11',
 #]
 
-location = [0,0]
+ship = [0,0]
+waypoint = [10,1]
 direction = 'E'
 directions = %w(E S W N)
 
 def move(location, direction, count)
   case direction
   when 'N'
-    location[0] += count
-  when 'S'
-    location[0] -= count
-  when 'E'
     location[1] += count
-  when 'W'
+  when 'S'
     location[1] -= count
+  when 'E'
+    location[0] += count
+  when 'W'
+    location[0] -= count
   end
 end
 
-def rotate(instruction, count, direction, directions)
+def rotate(instruction, count, waypoint)
   count = count / 90
-  current_direction = directions.index(direction)
-
-  case instruction
-  when 'R'
-    i = (current_direction + count) % 4
-    directions[i]
-  when 'L'
-    i = (current_direction - count) % 4
-    directions[i]
+  count.times do
+    if instruction == 'R'
+      waypoint = [waypoint[1], -waypoint[0]]
+    else
+      waypoint = [-waypoint[1], waypoint[0]]
+    end
   end
+  waypoint
 end
 
 inputs.each do |line|
@@ -48,14 +47,17 @@ inputs.each do |line|
 
   case instruction
   when 'N', 'S', 'E', 'W'
-    move(location, instruction, count)
+    move(waypoint, instruction, count)
   when 'L', 'R'
-    direction = rotate(instruction, count, direction, directions)
+    waypoint = rotate(instruction, count, waypoint)
   when 'F'
-    move(location, direction, count)
+    ship[0] = ship[0] + (count * waypoint[0])
+    ship[1] = ship[1] + (count * waypoint[1])
   end
+  puts "[#{line}] Ship #{ship.inspect} | Waypoint #{waypoint.inspect}"
+  #require 'pry'; binding.pry
 end
 
-puts location.reduce(0) {|acc, number| acc += number.abs; acc}
+puts ship.reduce(0) {|acc, number| acc += number.abs; acc}
 require 'pry'; binding.pry
 
