@@ -19,35 +19,39 @@ inputs = inputs.split("\n\n")
 
 
 rules = inputs[0].split("\n").reduce({}) { |acc, r|
-  key, values = r.split(': ')
-
-  values = values.split(' or ').map {|v|
-    v =~ /^(\d+)-(\d+)$/
-    ($1.to_i .. $2.to_i)
-  }
-
-  acc[key] = values
+  r =~ /^([a-z ]+): (\d+)-(\d+) or (\d+)-(\d+)$/
+  acc[$1] = [
+    ($2.to_i .. $3.to_i),
+    ($4.to_i .. $5.to_i),
+  ]
   acc
 }
 
-your_ticket = inputs[1].split("\n").last.split(',').map(&:to_i)
-nearby_tickets = inputs[2].split("\n")[1..-1].map {|t| t.split(",").map(&:to_i)}
+your_ticket = inputs[1]
+  .split("\n")
+  .last
+  .split(',')
+  .map(&:to_i)
+
+nearby_tickets = inputs[2]
+  .split("\n")[1..-1]
+  .map { |t| t.split(",").map(&:to_i) }
 
 
 def matching_rule?(numbers, rule)
-  result = numbers.find {|v| rule.all? {|r| !r.include?(v) } }
+  result = numbers.find {|v| rule.none? {|r| r.include?(v) } }
   !result
 end
 
 def valid?(number, rules)
-  result = rules.values.flatten.find { |r|
-    r.include?(number)
-  }
-  !!result
+  rules
+    .values
+    .flatten
+    .any? { |r| r.include?(number) }
 end
 
 valid_tickets = nearby_tickets.select do |t|
-  t.map { |n| valid?(n, rules) }.uniq == [true]
+  t.all? { |n| valid?(n, rules) }
 end
 
 headers = []
@@ -57,22 +61,20 @@ loop do
     next if headers[i]
 
     field = valid_tickets.transpose.at(i)
-    rule, _ = rules.select {|k, v| matching_rule?(field, v) && !headers.include?(k)}
+    rule = rules.select {|k, v| matching_rule?(field, v) && !headers.include?(k)}
 
-    if rule.values.size > 1
-      next
-    else
+    if rule.size == 1
       headers[i] = rule.keys.first
     end
   end
   break if headers.compact.size == rules.size
 end
 
-result = 1
-headers.each.with_index do |header, i|
-  if header.start_with?("departure")
-    result *= your_ticket[i]
-  end
-end
+result = headers
+  .zip(your_ticket)
+  .select {|k, v| k.start_with?("departure")}
+  .to_h
+  .values
+  .reduce(&:*)
 
 puts result
