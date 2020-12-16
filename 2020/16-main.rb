@@ -2,18 +2,17 @@
 
 inputs = File.read('16-input.txt')
 #inputs = <<-EOF
-#class: 1-3 or 5-7
-#row: 6-11 or 33-44
-#seat: 13-40 or 45-50
+#class: 0-1 or 4-19
+#row: 0-5 or 8-19
+#seat: 0-13 or 16-19
 
 #your ticket:
-#7,1,14
+#11,12,13
 
 #nearby tickets:
-#7,3,47
-#40,4,50
-#55,2,20
-#38,6,12
+#3,9,18
+#15,1,5
+#5,14,9
 #EOF
 
 inputs = inputs.split("\n\n")
@@ -35,18 +34,45 @@ your_ticket = inputs[1].split("\n").last.split(',').map(&:to_i)
 nearby_tickets = inputs[2].split("\n")[1..-1].map {|t| t.split(",").map(&:to_i)}
 
 
-def valid?(number, rules)
-  rules.values.flatten.find { |r|
-    r.include?(number)
-  }
+def matching_rule?(numbers, rule)
+  result = numbers.find {|v| rule.all? {|r| !r.include?(v) } }
+  !result
 end
 
+def valid?(number, rules)
+  result = rules.values.flatten.find { |r|
+    r.include?(number)
+  }
+  !!result
+end
 
-result = nearby_tickets.reduce(0) do |acc, t|
-  t.each do |n|
-    acc += n unless valid?(n, rules)
+valid_tickets = nearby_tickets.select do |t|
+  t.map { |n| valid?(n, rules) }.uniq == [true]
+end
+
+headers = []
+
+loop do
+  (0 .. rules.size - 1).each do |i|
+    next if headers[i]
+
+    field = valid_tickets.transpose.at(i)
+    rule, _ = rules.select {|k, v| matching_rule?(field, v) && !headers.include?(k)}
+
+    if rule.values.size > 1
+      next
+    else
+      headers[i] = rule.keys.first
+    end
   end
-  acc
+  break if headers.compact.size == rules.size
+end
+
+result = 1
+headers.each.with_index do |header, i|
+  if header.start_with?("departure")
+    result *= your_ticket[i]
+  end
 end
 
 puts result
