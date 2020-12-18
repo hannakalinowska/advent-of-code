@@ -2,9 +2,9 @@
 
 inputs = File.read('18-input.txt').split("\n")
 #inputs = [
-#  '1 + 2 * 3 + 4 * 5 + 6',
-#  '1 + (2 * 3) + (4 * (5 + 6))',
-#  '((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2',
+  #'1 + 2 * 3 + 4 * 5 + 6',
+  #'1 + (2 * 3) + (4 * (5 + 6))',
+  #'((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2',
 #]
 
 def calculate(expression)
@@ -12,7 +12,7 @@ def calculate(expression)
 end
 
 def step(expression)
-  if expression =~ /^(\d+ [+*] \d+)/
+  if expression =~ /(\d+ \+ \d+)/
     return expression.sub($1, calculate($1).to_s)
   elsif expression =~ /^\d+$/
     return expression
@@ -24,6 +24,8 @@ def step(expression)
       break if without_brackets =~ /^\d+$/
     end
     return expression.sub(with_brackets, without_brackets.to_s)
+  elsif expression =~ /(\d+ \* \d+)/
+    return expression.sub($1, calculate($1).to_s)
   end
 end
 
