@@ -34,6 +34,7 @@ class Board
 
   def start
     tiles.each.with_index do |t, iteration|
+      next unless iteration == 178
       puts iteration
       positions[0][0] = t
       board = self.solve
