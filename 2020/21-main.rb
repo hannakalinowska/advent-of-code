@@ -21,19 +21,20 @@ inputs.each do |line|
   end
 end
 
-allergens = allergens.map {|a, i| i.reduce(&:&) }
+allergens = allergens.map {|a, i| [a, i.reduce(&:&)] }.to_h
 
-bad_ingredients = []
+bad_ingredients = {}
 loop do
-  allergens.map! do |a|
-    a = a - bad_ingredients
+  allergens = allergens.map { |k, a|
+    a = a - bad_ingredients.values.flatten
     if a.size == 1
-      bad_ingredients += a
+      bad_ingredients[k] ||= []
+      bad_ingredients[k] += a
     end
-    a
-  end
+    [k, a]
+  }.to_h
 
-  break if allergens.all? {|a| a.empty?}
+  break if allergens.values.all? {|a| a.empty?}
 end
 
-puts (all_ingredients.flatten - bad_ingredients).size
+puts bad_ingredients.sort.map{|k, v| v}.join(',')
