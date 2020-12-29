@@ -14,10 +14,6 @@ inputs = File.read('19-input.txt').split("\n\n")
 #aaaabbb'
 #]
 
-rules = {}
-terminators = []
-
-
 class Foo
   attr_accessor :rules, :terminators
 
@@ -41,13 +37,10 @@ class Foo
 
   def expand(rule)
     return rule if rule =~ /^[ab ]+$/
-    begin
-      rule =~ /(\d+)/
-      index = $1
-      rules[index].map {|r| rule.sub(index, r)}
-    rescue => e
-      require 'pry'; binding.pry
-    end
+
+    rule =~ /(\d+)/
+    index = $1
+    rules[index].map {|r| rule.sub(index, r)}
   end
 
   def step(rule)
@@ -67,11 +60,21 @@ end
 
 foo = Foo.new
 foo.parse_inputs(inputs)
-result = foo.go!(foo.rules["0"])
-  .map { |line| line.gsub(' ', '') }
+
+#these two rules cover /^[ab]{8}$/
+forty_two = foo.go!(foo.rules["42"]).map{|r| r.gsub(' ', '')}
+thirty_one = foo.go!(foo.rules["31"]).map {|r| r.gsub(' ', '')}
+
+# 0: 8 11
+# 8: 42 | 42 8
+# 11: 42 31 | 42 11 31
+
+eight = /(?:#{forty_two.join('|')})+/
+eleven = /((?:#{forty_two.join('|')})\g<1>*(?:#{thirty_one.join('|')}))/
 
 words = inputs.last.split("\n")
 
-matching = words & foo
+matching = words.select do |word|
+  word =~ /^#{eight}#{eleven}$/
+end
 puts matching.size
-
