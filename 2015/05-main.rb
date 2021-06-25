@@ -11,26 +11,13 @@ def rule_two?(line)
 end
 
 def rule_three?(line)
-  previous = nil
-  line.split('').each do |c|
-    if previous && c == previous.next
-      return false
-    end
-    previous = c
-  end
-  true
+  line !~ /ab|cd|pq|xy/
 end
 
 nice = inputs.select do |line|
   one = rule_one?(line)
   two = rule_two?(line)
   three = rule_three?(line)
-
-  #if !(one && two && three)
-  #  puts one.inspect, two.inspect, three.inspect
-  #  puts line
-  #  require 'pry'; binding.pry
-  #end
 
   one && two && three
 end
