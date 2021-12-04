@@ -15,6 +15,6 @@ boards.map do |b|
   b.play(numbers)
 end
 
-winning = boards.min {|a, b| a.moves_to_win <=> b.moves_to_win}
+winning = boards.max {|a, b| a.moves_to_win <=> b.moves_to_win}
 
 puts winning.score
