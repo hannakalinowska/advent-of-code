@@ -2,7 +2,7 @@ class Board
   attr_accessor :board, :moves_to_win
 
   def initialize(line)
-    @board = line.split("\n").map(&:split)
+    @board = line.split("\n").map(&:split).flatten
     @moves_to_win = nil
     @last_number = nil
   end
@@ -20,21 +20,19 @@ class Board
   end
 
   def mark(n)
-    (0 .. 4).each do |i|
-      (0 .. 4).each do |j|
-        if @board[i][j] == n
-          #puts "Marking as won"
-          #puts @board.inspect
-          @board[i][j] = nil
-        end
-      end
+    @board.map! do |i|
+      i == n ? nil : i
     end
   end
 
   def won?
+    @board.include?([nil, nil, nil, nil, nil])
+
     (0 .. 4).each do |i|
-      return true if @board[i].uniq == [nil]
-      return true if @board.transpose[i].uniq == [nil]
+      return true if @board.values_at(i, i+5, i+2*5, i+3*5, i+4*5).uniq == [nil]
+    end
+    [0, 5, 10, 15, 20].each do |i|
+      return true if @board[i .. i+4].uniq == [nil]
     end
     false
   end
