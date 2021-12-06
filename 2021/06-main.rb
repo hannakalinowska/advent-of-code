@@ -5,7 +5,7 @@ inputs = File.read('06-input.txt').split(',').map(&:to_i)
 
 old_fish = inputs
 
-80.times do |i|
+256.times do |i|
   puts "#{i}: count: #{old_fish.size}"
 
   new_fish = []
