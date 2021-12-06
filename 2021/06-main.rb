@@ -3,19 +3,34 @@
 inputs = File.read('06-input.txt').split(',').map(&:to_i)
 #inputs = "3,4,3,1,2".split(',').map(&:to_i)
 
-old_fish = inputs
+default = {
+  0 => 0,
+  1 => 0,
+  2 => 0,
+  3 => 0,
+  4 => 0,
+  5 => 0,
+  6 => 0,
+  7 => 0,
+  8 => 0,
+}
+
+counts = inputs.reduce(default) { |acc, i|
+  acc[i] += 1
+  acc
+}
 
 256.times do |i|
-  puts "#{i}: count: #{old_fish.size}"
-
-  new_fish = []
-  old_fish.map! do |f|
-    if f == 0
-      new_fish << 8
-    end
-     f < 1 ?  (f - 1) % 7 : f - 1
-  end
-  old_fish += new_fish
+  tmp = counts[0]
+  counts[0] = counts[1]
+  counts[1] = counts[2]
+  counts[2] = counts[3]
+  counts[3] = counts[4]
+  counts[4] = counts[5]
+  counts[5] = counts[6]
+  counts[6] = counts[7] + tmp
+  counts[7] = counts[8]
+  counts[8] = tmp
 end
 
-puts old_fish.count
+puts counts.values.sum
