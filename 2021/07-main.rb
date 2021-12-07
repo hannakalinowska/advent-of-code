@@ -6,10 +6,10 @@ inputs = File.read('07-input.txt').split(',').map(&:to_i)
 fuel = {}
 
 0.upto(inputs.max) do |i|
-  fuel[i] = inputs.reduce(0) {|acc, n| acc + (i - n).abs}
+  fuel[i] = inputs.reduce(0) {|acc, n|
+    distance = (i - n).abs
+    acc + ((1 + distance) * (distance / 2.0))
+  }
 end
 
-puts fuel.key(fuel.values.min)
-
-require 'pry'; binding.pry
-puts
+puts fuel.values.min
