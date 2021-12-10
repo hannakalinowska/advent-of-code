@@ -27,10 +27,10 @@ inputs = File.read("10-input.txt").split(/\n/)
   '<' => '>',
 }
 @scores = {
-  ')' => 3,
-  ']' => 57,
-  '}' => 1197,
-  '>' => 25137,
+  ')' => 1,
+  ']' => 2,
+  '}' => 3,
+  '>' => 4,
 }
 
 def score(char)
@@ -48,11 +48,14 @@ def valid?(stack, line)
       if @pairs[stack.first] == char
         stack.shift
       else
-        return score(char)
+        return false
       end
     end
   end
-  return stack.empty?
+
+  stack.reduce(0) {|acc, s|
+    acc * 5 + @scores[@pairs[s]]
+  }
 end
 
 scores = inputs.map do |line|
@@ -62,4 +65,5 @@ scores = inputs.map do |line|
   valid?(stack, line)
 end
 
-puts scores.reject {|s| s == false}.sum
+scores = scores.reject {|s| s == false}.sort
+puts scores[scores.size/2]
