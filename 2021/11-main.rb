@@ -44,8 +44,11 @@ def step(inputs)
 end
 
 @flashes = 0
-100.times do |i|
+i = 0
+loop do
+  i += 1
   step(inputs)
+  break if inputs.flatten.uniq == [0]
 end
 
-puts @flashes
+puts i
