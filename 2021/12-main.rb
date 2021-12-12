@@ -22,9 +22,22 @@ inputs.each do |line|
   connections[to] << from
 end
 
+def valid?(cave, path)
+  counts = path.reduce({}) {|acc, c|
+    if c.match?(/^[a-z]+$/)
+      acc[c] ||= 0
+      acc[c] += 1
+    end
+    acc
+  }
+  return false if counts['start'] == 1 && cave == 'start'
+  return false if counts.values.uniq == [1, 2] && counts[cave] && counts[cave] > 0
+  true
+end
+
 def enter(cave, path, connections)
   return (path + ['end']).flatten if cave == 'end'
-  return nil if path.include?(cave) && cave.match?(/^[a-z]+$/)
+  return nil unless valid?(cave, path)
 
   foo = connections[cave].map do |c|
     enter(c, path + [cave], connections)
