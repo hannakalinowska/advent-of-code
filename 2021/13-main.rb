@@ -26,26 +26,37 @@ inputs = File.read('13-input.txt')
 #EOF
 
 points, folds = inputs.split("\n\n").map {|i| i.split("\n")}
+points = points.map {|p| p.split(',').map(&:to_i) }
 
-folds.first =~ /(x|y)=(\d+)$/
-direction = $1
-fold_line = $2.to_i
+folds.each do |fold|
+  fold =~ /(x|y)=(\d+)$/
+  direction = $1
+  fold_line = $2.to_i
+
+  new_points = []
+  points.each do |x, y|
+    if direction == 'x' && x > fold_line
+      x = fold_line - (fold_line - x).abs
+    end
+
+    if direction == 'y' && y > fold_line
+      y = fold_line - (fold_line - y).abs
+    end
+
+    new_points << [x, y]
+  end
+  points = new_points.uniq
+end
 
 paper = []
-
-points.each do |coordinates|
-  x, y = coordinates.split(',').map(&:to_i)
-
-  if direction == 'x' && x > fold_line
-    x = fold_line - (fold_line - x).abs
-  end
-
-  if direction == 'y' && y > fold_line
-    y = fold_line - (fold_line - y).abs
-  end
-
+points.each do |x,y|
   paper[y] ||= []
   paper[y][x] = true
 end
 
-puts paper.flatten.compact.size
+paper.each do |row|
+  row.each do |value|
+    value ? print('#') : print('.')
+  end
+  print "\n"
+end
