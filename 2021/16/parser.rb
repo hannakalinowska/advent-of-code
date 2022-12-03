@@ -39,11 +39,9 @@ class Parser
       return decode_literal(packet[6 .. -1], result)
     else
       length_type_id = packet[6].to_i(2)
-      result[:length_type_id] = length_type_id
       if length_type_id == 0
         # length is a 15-bit number representing the number of bits in the sub-packets
         length = packet[7..21].to_i(2)
-        result[:length] = length
         remainder = packet[22..22+length-1]
         result[:subpackets] = []
         loop do
