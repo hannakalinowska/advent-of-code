@@ -14,13 +14,11 @@ input = input.split("\n")
 priorities = (('a' .. 'z').zip(1 .. 26) + ('A' .. 'Z').zip(27 .. 52)).to_h
 
 total = 0
-input.each do |line|
-  length = line.length/2
-  first_half = line[0..length-1].split('')
-  second_half = line[length..line.length].split('')
+input.each_slice(3) do |lines|
+  lines.map! {|l| l.split('')}
+  shared = lines[0] & lines[1] & lines[2]
 
-  shared = (first_half & second_half).first
-  total += priorities[shared]
+  total += priorities[shared.first]
 end
 
 puts total
