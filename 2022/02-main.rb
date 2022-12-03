@@ -1,6 +1,12 @@
 #! /usr/bin/env ruby
 
 input = File.read('02-input.txt').split("\n")
+#input = <<-EOF
+#A Y
+#B X
+#C Z
+#EOF
+#input = input.split("\n")
 
 # A X Rock
 # B Y Paper
@@ -19,11 +25,28 @@ results = {
   'C Z' => 3,
 }
 
+# X lose
+# Y draw
+# Z win
+plays = {
+  'A X' => 'Z',
+  'A Y' => 'X',
+  'A Z' => 'Y',
+  'B X' => 'X',
+  'B Y' => 'Y',
+  'B Z' => 'Z',
+  'C X' => 'Y',
+  'C Y' => 'Z',
+  'C Z' => 'X',
+}
+fixed_results = {'X' => 0, 'Y' => 3, 'Z' => 6}
+
 score = 0
 input.each do |line|
   line =~ /^(\w) (\w)$/
-  score += shapes[$2]
-  score += results[line]
+  shape = plays[line]
+  score += shapes[shape]
+  score += fixed_results[$2]
 end
 
 puts score
