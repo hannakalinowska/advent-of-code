@@ -5,11 +5,12 @@ input = File.read('06-input.txt')
 #input = 'mjqjpqmgbljsphdztnvjfqwrcgsmlb'
 
 input = input.split('')
+LENGTH = 14
 
 input.each_with_index do |c, i|
-  four_characters = input[i .. i+3]
-  if four_characters.uniq.length == 4
-    puts i + 4
+  four_characters = input[i .. i+LENGTH-1]
+  if four_characters.uniq.length == LENGTH
+    puts i + LENGTH
     break
   end
 end
