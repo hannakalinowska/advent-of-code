@@ -29,7 +29,7 @@ input = File.read('07-input.txt')
 input = input.split("\n")
 
 TOTAL_DISK_SPACE = 70_000_000
-FREE_SPACE_NEEDED = 30_000_000
+TOTAL_FREE_SPACE_NEEDED = 30_000_000
 
 files = {}
 
@@ -66,4 +66,6 @@ files.each do |path, f|
   end
 end
 
-puts total_dir_sizes.select { |path, f| f <= 100_000 }.values.sum
+current_free_space = TOTAL_DISK_SPACE - total_dir_sizes[["/"]]
+free_space_needed = TOTAL_FREE_SPACE_NEEDED - current_free_space
+puts total_dir_sizes.select { |path, size| size >= free_space_needed }.values.min
