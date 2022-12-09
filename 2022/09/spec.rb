@@ -69,5 +69,12 @@ RSpec.describe Rope do
         end
       end
     end
+
+    describe 'part two' do
+      it 'works' do
+        subject = Rope.new([2, 1], [0, 0])
+        expect(subject.move_tail).to eq([1, 1])
+      end
+    end
   end
 end

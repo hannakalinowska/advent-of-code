@@ -1,4 +1,6 @@
 class Rope
+  attr_accessor :head, :tail
+
   def initialize(head, tail)
     @head = head
     @tail = tail
