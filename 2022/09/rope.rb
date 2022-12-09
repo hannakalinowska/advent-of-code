@@ -1,53 +1,85 @@
 class Rope
-  attr_accessor :head, :tail
+  attr_accessor :knots
 
-  def initialize(head, tail)
-    @head = head
-    @tail = tail
+  def initialize(knots)
+    @knots = knots
   end
 
   def move_head(direction, number)
+    head = knots.first
     case direction
     when 'L'
-      @head = [@head[0]-number, @head[1]]
-      move_tail
+      head[0] -= number
+      move_knots
     when 'R'
-      @head = [@head[0]+number, @head[1]]
-      move_tail
+      head[0] += number
+      move_knots
     when 'U'
-      @head = [@head[0], @head[1]+number]
-      move_tail
+      head[1] += number
+      move_knots
     when 'D'
-      @head = [@head[0], @head[1]-number]
-      move_tail
+      head[1] -= number
+      move_knots
     else
       raise
     end
+    @knots.last
   end
 
-  def move_tail
-    return @tail if @head == @tail
+  def move_knots
+    @knots.each_with_index do |knot, i|
+      next if i == 0
 
-    horizontal_diff = @head[0] - @tail[0]
-    vertical_diff = @head[1] - @tail[1]
+      move_knot(@knots[i-1], knot)
+    end
+  end
 
-    return @tail if horizontal_diff.abs == 1 && vertical_diff.abs == 1
+  def move_knot(previous_knot, knot)
+    return if previous_knot == knot
 
-    if horizontal_diff.abs > vertical_diff.abs
+    horizontal_diff = previous_knot[0] - knot[0]
+    vertical_diff = previous_knot[1] - knot[1]
+    new_horizontal_diff = horizontal_diff
+    new_vertical_diff = vertical_diff
+
+    return if horizontal_diff.abs == 1 && vertical_diff.abs == 1
+
+    if horizontal_diff.abs >= vertical_diff.abs
       if horizontal_diff > 0
-        horizontal_diff -= 1
+        new_horizontal_diff -= 1
       else
-        horizontal_diff += 1
+        new_horizontal_diff += 1
       end
-    else
+    end
+    if horizontal_diff.abs <= vertical_diff.abs
       if vertical_diff > 0
-        vertical_diff -= 1
+        new_vertical_diff -= 1
       else
-        vertical_diff += 1
+        new_vertical_diff += 1
       end
     end
 
-    @tail = [@tail[0]+horizontal_diff, @tail[1]+vertical_diff]
-    @tail
+    knot[0] += new_horizontal_diff
+    knot[1] += new_vertical_diff
+  end
+
+  def pretty_print
+    positions = knots.reduce({}) { |acc, r| acc[r] ||= knots.index(r); acc }
+
+    min_x = positions.keys.map {|p| p[0]}.min - 1
+    max_x = positions.keys.map {|p| p[0]}.max + 1
+    min_y = positions.keys.map {|p| p[1]}.min - 1
+    max_y = positions.keys.map {|p| p[1]}.max + 1
+
+    (min_x .. max_x).each do |i|
+      (min_y .. max_y).each do |j|
+        if positions.keys.include?([i, j])
+          print positions[[i, j]]
+        else
+          print '.'
+        end
+      end
+      puts
+    end
   end
 end
