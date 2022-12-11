@@ -1,10 +1,10 @@
 class Monkey
-  attr_accessor :items, :count
+  attr_accessor :items, :count, :test_number
 
   def self.parse(input)
     items = []
     operation = nil
-    test = nil
+    test_number = nil
     true_target = nil
     false_target = nil
     input.split("\n").each do |line|
@@ -14,28 +14,32 @@ class Monkey
       when line =~ /Operation: (.+)$/
         operation = $1
       when line =~ /Test: divisible by (\d+)$/
-        test = $1.to_i
+        test_number = $1.to_i
       when line =~ /If true: throw to monkey (\d+)$/
         true_target = $1.to_i
       when line =~ /If false: throw to monkey (\d+)$/
         false_target = $1.to_i
       end
     end
-    Monkey.new(items: items, operation: operation, test: test, true_target: true_target, false_target: false_target)
+    Monkey.new(items: items, operation: operation, test_number: test_number, true_target: true_target, false_target: false_target)
   end
 
-  def initialize(items:, operation:, test:, true_target:, false_target:)
+  def initialize(items:, operation:, test_number:, true_target:, false_target:)
     @items = items
     @operation = operation
-    @test = test
+    @test_number = test_number
     @true_target = true_target
     @false_target = false_target
     @count = 0
   end
 
-  def test(item)
+  def test(item, modulo)
     @count += 1
-    item % @test == 0 ? @true_target : @false_target
+    if item % @test_number == 0
+      [item % modulo, @true_target]
+    else
+      [item % modulo, @false_target]
+    end
   end
 
   def operation(item)

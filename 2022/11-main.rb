@@ -35,17 +35,19 @@ input = File.read('11-input.txt')
 input = input.split("\n\n")
 
 monkeys = input.reduce([]) {|acc, input| acc << Monkey.parse(input); acc}
+modulo = monkeys.map {|m| m.test_number}.reduce(:*)
+rounds = 10_000
 
-20.times do
+rounds.times do |i|
+  puts "Round #{i}" if i % 1000 == 0
   monkeys.each do |monkey|
     loop do
       item = monkey.items.shift
       if item
         item = monkey.operation(item)
-        item = ((1.0 * item)/3).floor
 
-        i = monkey.test(item)
-        monkeys[i].items << item
+        new_item, i = monkey.test(item, modulo)
+        monkeys[i].items << new_item
       end
 
       break if monkey.items.empty?
