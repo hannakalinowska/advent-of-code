@@ -12,11 +12,11 @@ input = File.read('12-input.txt')
 #EOF
 input = input.split("\n").map {|line| line.split('')}
 
-start_node = nil
+start_nodes = []
 input.each_with_index do |line, i|
   line.each_with_index do |height, j|
-    if height == 'S'
-      start_node = [i, j]
+    if height == 'S' || height == 'a'
+      start_nodes << [i, j]
       break
     end
   end
@@ -34,6 +34,7 @@ end
 
 $max_i = input.length
 $max_j = input.first.length
+total_distances = []
 
 def node_index(i, j)
   "#{i},#{j}"
@@ -43,23 +44,11 @@ def reverse_node_index(i)
   i.split(',').map(&:to_i)
 end
 
-distances = {
-  node_index(*start_node) => 0
-}
-previous = {}
-
-unvisited = Set.new
-(0 .. $max_i-1).each do |i|
-  (0 .. $max_j-1).each do |j|
-    unvisited << node_index(i, j)
-  end
-end
-
 def height_difference(node1, node2)
   node1 = node1.gsub(/S/, 'a').gsub(/E/, 'z')
   node2 = node2.gsub(/S/, 'a').gsub(/E/, 'z')
 
-  (node2.ord - node1.ord)
+  node2.ord - node1.ord
 end
 
 def neighbours(node, input)
@@ -79,36 +68,52 @@ def neighbours(node, input)
   neighbours
 end
 
-t = Time.now
-loop do
-  # find next min value
-  min_distance = nil
-  current_node = nil
-  distances.each do |node, distance|
-    next unless unvisited.include?(node)
-    if min_distance.nil? || distance < min_distance
-      min_distance = distance
-      current_node = node
+
+start_nodes.each_with_index do |start_node, x|
+  distances = {
+    node_index(*start_node) => 0
+  }
+  previous = {}
+
+  unvisited = Set.new
+  (0 .. $max_i-1).each do |i|
+    (0 .. $max_j-1).each do |j|
+      unvisited << node_index(i, j)
     end
   end
 
-  break if current_node.nil? # yes I know this is wrong. Whatever.
-
-  neighbours(reverse_node_index(current_node), input).each do |node, distance|
-    total_distance = distance + distances[current_node].to_i
-    if distances[node].nil? || distances[node] > total_distance
-      distances[node] = total_distance
-      previous[node] = current_node
+  t = Time.now
+  loop do
+    # find next min value
+    min_distance = nil
+    current_node = nil
+    distances.each do |node, distance|
+      next unless unvisited.include?(node)
+      if min_distance.nil? || distance < min_distance
+        min_distance = distance
+        current_node = node
+      end
     end
+
+    break if current_node.nil? # yes I know this is wrong. Whatever.
+
+    neighbours(reverse_node_index(current_node), input).each do |node, distance|
+      total_distance = distance + distances[current_node].to_i
+      if distances[node].nil? || distances[node] > total_distance
+        distances[node] = total_distance
+        previous[node] = current_node
+      end
+    end
+    unvisited.delete(current_node)
+    if unvisited.size % 1000 == 0
+      puts "#{unvisited.size} (#{Time.now - t}s)"
+      t = Time.now
+    end
+    foo = current_node
+    break if unvisited.empty?
   end
-  unvisited.delete(current_node)
-  if unvisited.size % 1000 == 0
-    puts "#{unvisited.size} (#{Time.now - t}s)"
-    t = Time.now
-  end
-  foo = current_node
-  break if unvisited.empty?
+
+  total_distances <<  distances[node_index(*target_node)]
 end
 
-puts distances[node_index(*target_node)]
-
+puts total_distances.min
