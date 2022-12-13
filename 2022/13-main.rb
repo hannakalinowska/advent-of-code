@@ -27,6 +27,12 @@ input = File.read('13-input.txt')
 #[1,[2,[3,[4,[5,6,0]]]],8,9]
 #EOF
 input = input.split("\n\n")
+  .map {|pair| pair.split("\n")}
+  .flatten
+  .map {|l| eval(l)}
+
+input << [[2]]
+input << [[6]]
 
 def compare_arrays(line1, line2)
   max_length = [line1.length, line2.length].max
@@ -72,14 +78,16 @@ def compare(line1, line2)
   result
 end
 
-correct_pairs = []
+values = {
+  :correct => -1,
+  :incorrect => 1,
+  :continue => 0,
+}
 
-input.each_with_index do |pair, index|
-  line1, line2 = pair.split("\n").map {|l| eval(l)}
-
-  result = compare(line1, line2)
-  if result == :correct
-    correct_pairs << index + 1
-  end
+sorted = input.sort do |a, b|
+  values.fetch(compare(a, b))
 end
-puts correct_pairs.sum
+
+x = sorted.index([[2]]) + 1
+y = sorted.index([[6]]) + 1
+puts x * y
