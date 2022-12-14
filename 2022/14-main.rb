@@ -26,19 +26,41 @@ input.each do |line|
   end
 end
 
+def empty_below?(rocks, sand)
+  !rocks.include?([sand[0], sand[1]+1])
+end
+
+def empty_below_left?(rocks, sand)
+  !rocks.include?([sand[0]-1, sand[1]+1])
+end
+
+def empty_below_right?(rocks, sand)
+  !rocks.include?([sand[0]+1, sand[1]+1])
+end
+
+def floor_below?(floor, sand)
+  sand[1]+1 == floor
+end
+
 # Where are the lowest rocks?
-lowest_rocks = rocks.map(&:last).max
+floor = rocks.map(&:last).max + 2
 
 # sand falls
 sand_count = 0
 loop do
   sand = [500, 0]
   loop do
-    if !rocks.include?([sand[0], sand[1]+1])
+    #puts sand_count
+    if floor_below?(floor, sand)
+      rocks << sand
+      sand_count += 1
+      break
+    end
+    if empty_below?(rocks, sand)
       sand = [sand[0], sand[1]+1]
-    elsif !rocks.include?([sand[0]-1, sand[1]+1])
+    elsif empty_below_left?(rocks, sand)
       sand = [sand[0]-1, sand[1]+1]
-    elsif !rocks.include?([sand[0]+1, sand[1]+1])
+    elsif empty_below_right?(rocks, sand)
       sand = [sand[0]+1, sand[1]+1]
     else
       # nowhere else for sand to go
@@ -47,10 +69,10 @@ loop do
       break
     end
 
-    if sand[1] > lowest_rocks
+    if sand == [500,0]
       break
     end
   end
-  break if sand[1] > lowest_rocks
+  break if sand == [500,0]
 end
 puts sand_count
