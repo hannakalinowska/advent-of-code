@@ -22,9 +22,12 @@ input = File.read('15-input.txt')
 #EOF
 input = input.split("\n")
 
-cutoff_line = 2_000_000
-#cutoff_line = 11
-
+min_x = 0
+min_y = 0
+max_x = 4_000_000
+max_y = 4_000_000
+#max_x = 20
+#max_y = 20
 
 def pretty_print(sensors)
   max_range = sensors.map {|s| s.range}.max
@@ -65,22 +68,26 @@ input.each do |line|
   filled_spaces << [$3.to_i, $4.to_i] # beacon is here
 end
 
-max_range = sensors.map {|s| s.range}.max
-min_x = sensors.map {|s| s.sensor_x}.min - max_range # - 1_000_000
-max_x = sensors.map {|s| s.sensor_x}.max + max_range # + 1_000_000
-count = 0
-
-puts "min_x: #{min_x}, max_x: #{max_x}"
-
+t = Time.now
 (min_x .. max_x).each do |x|
-  puts x if x % 100_000 == 0
-  sensors.each do |sensor|
-    if sensor.contains?(x, cutoff_line) &&
-        !filled_spaces.include?([x, cutoff_line])
-      count += 1
-      break
+  if x % 10_000 == 0
+    puts "#{x}, #{Time.now - t}"
+    t = Time.now
+  end
+  line = sensors.map {|s| s.y_range(x) }
+    .compact
+    .sort
+  coverage = line.shift
+  line.each do |start, finish|
+    if start < coverage.first && coverage.first <= finish
+      coverage.first = start
+    end
+    if start <= coverage.last && coverage.last < finish
+      coverage[1] = finish
+    end
+    if coverage.last < start
+      puts (coverage.last + 1) * 4_000_000 + x
+      exit
     end
   end
 end
-puts count
-

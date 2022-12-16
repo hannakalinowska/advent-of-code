@@ -14,6 +14,14 @@ class Sensor
     distance(x, y) <= @range
   end
 
+  def y_range(y)
+    #require 'pry'; binding.pry
+    used = distance(@sensor_x, y)
+    remaining = @range - used
+    return nil if remaining <= 0
+    [@sensor_x - remaining, @sensor_x + remaining]
+  end
+
   def distance(x, y)
     (@sensor_x - x).abs + (@sensor_y - y).abs
   end
