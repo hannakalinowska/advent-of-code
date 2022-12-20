@@ -2,6 +2,7 @@
 
 require_relative '20/list'
 
+decryption_key = 811589153
 input = File.read('20-input.txt')
 #input = <<-EOF
 #1
@@ -13,10 +14,10 @@ input = File.read('20-input.txt')
 #4
 #EOF
 input = input.split("\n").map do |n|
-  [rand(1_000_000_000).to_s(16), n.to_i]
+  [rand(1_000_000_000).to_s(16), n.to_i * decryption_key]
 end
 
-queue = input.dup
+queue = input.dup * 10
 list = List.new(input)
 
 loop do
