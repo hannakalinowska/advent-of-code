@@ -1,6 +1,7 @@
 #! /usr/bin/env ruby
 
 require_relative '23/elf'
+require_relative '23/board'
 
 input = File.read('23-input.txt')
 #input = <<-EOF
@@ -40,20 +41,26 @@ def pretty_print(positions)
 end
 
 elves = []
+board = Board.new
 
 input.each_with_index do |line, i|
   line.each_with_index do |c, j|
     if c == '#'
-      elves << Elf.new(i, j)
+      elves << Elf.new(i, j, board: board)
     end
   end
 end
 
+board.elves = elves
+
 round = 0
 direction_order = %w(N S W E)
+t = Time.now
 loop do
-  puts "======= Round #{round} ============="
+  puts "======= Round #{round} (#{Time.now - t}) =========="
+  t = Time.now
   #pretty_print(elves.map(&:position))
+
   # Step 1: try
   proposed_moves = {}
   elves.each do |elf|
@@ -73,18 +80,13 @@ loop do
       elves.map(&:cancel)
     end
   end
+  board.commit
   round += 1
   direction_order.rotate!
 
-  break if round == 10
+  break if proposed_moves.empty?
 end
 #puts "======= Round #{round} ============="
 #pretty_print(elves.map(&:position))
 
-positions = elves.map(&:position)
-min_x = positions.map(&:first).flatten.min
-max_x = positions.map(&:first).flatten.max
-min_y = positions.map(&:last).flatten.min
-max_y = positions.map(&:last).flatten.max
-
-puts (max_x - min_x + 1).abs*(max_y - min_y + 1).abs - elves.size
+puts round

@@ -1,41 +1,21 @@
 class Elf
   attr_reader :elf_id
 
-  def initialize(x, y)
+  def initialize(x, y, board: nil)
     @x = x
     @y = y
+    @board = board
     @proposed_move = nil
+    @neighbours = {}
   end
 
   def to_s
     "Elf #{@elf_id} [#{@x}, #{@y}]"
   end
 
-  def neighbours(x, y, direction)
-    moves = []
-    case direction
-    when 'N'
-      moves << [x-1, y-1]
-      moves << [x-1, y]
-      moves << [x-1, y+1]
-    when 'S'
-      moves << [x+1, y-1]
-      moves << [x+1, y]
-      moves << [x+1, y+1]
-    when 'E'
-      moves << [x-1, y+1]
-      moves << [x, y+1]
-      moves << [x+1, y+1]
-    when 'W'
-      moves << [x-1, y-1]
-      moves << [x, y-1]
-      moves << [x+1, y-1]
-    end
-    moves
-  end
 
   def proposed_move(elves, direction_order)
-    return if all_alone?(elves)
+    return if all_alone?
 
     moves = {
       'N' => [@x-1, @y],
@@ -44,11 +24,9 @@ class Elf
       'W' => [@x, @y-1],
     }
 
-    positions = elves.map(&:position)
-
     direction_order.each do |direction|
-      neighbours = neighbours(@x, @y, direction)
-      if neighbours.none?{|m| positions.include?(m)}
+      neighbours = @board.neighbours(@x, @y, direction).map {|x, y| 1_000_000 * x + y}
+      if neighbours.none?{|m| @board.positions.include?(m)}
         @proposed_move = moves[direction]
         break
       end
@@ -57,7 +35,7 @@ class Elf
   end
 
   def position
-    [@x, @y]
+    1_000_000 * @x + @y
   end
 
   def commit
@@ -67,46 +45,15 @@ class Elf
     @y = @proposed_move.last
 
     @proposed_move = nil
+    @neighbours = {}
   end
 
   def cancel
     @proposed_move = nil
   end
 
-  def all_alone?(elves)
-    north_move?(elves) && south_move?(elves) && east_move?(elves) && west_move?(elves)
-  end
-
-  def east_move?(elves)
-    positions = elves.map(&:position)
-
-    moves = neighbours(@x, @y, 'E')
-
-    moves.none?{|m| positions.include?(m)}
-  end
-
-  def west_move?(elves)
-    positions = elves.map(&:position)
-
-    moves = neighbours(@x, @y, 'W')
-
-    moves.none?{|m| positions.include?(m)}
-  end
-
-  def south_move?(elves)
-    positions = elves.map(&:position)
-
-    moves = neighbours(@x, @y, 'S')
-
-    moves.none?{|m| positions.include?(m)}
-  end
-
-  def north_move?(elves)
-    positions = elves.map(&:position)
-
-    moves = neighbours(@x, @y, 'N')
-
-    moves.none?{|m| positions.include?(m)}
+  def all_alone?
+    @board.north_move?(@x, @y) && @board.south_move?(@x, @y) && @board.east_move?(@x, @y) && @board.west_move?(@x, @y)
   end
 end
 
