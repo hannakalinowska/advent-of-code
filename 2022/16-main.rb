@@ -1,18 +1,18 @@
 #! /usr/bin/env ruby
 
 input = File.read('16-input.txt')
-input = <<-EOF
-Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
-Valve BB has flow rate=13; tunnels lead to valves CC, AA
-Valve CC has flow rate=2; tunnels lead to valves DD, BB
-Valve DD has flow rate=20; tunnels lead to valves CC, AA, EE
-Valve EE has flow rate=3; tunnels lead to valves FF, DD
-Valve FF has flow rate=0; tunnels lead to valves EE, GG
-Valve GG has flow rate=0; tunnels lead to valves FF, HH
-Valve HH has flow rate=22; tunnel leads to valve GG
-Valve II has flow rate=0; tunnels lead to valves AA, JJ
-Valve JJ has flow rate=21; tunnel leads to valve II
-EOF
+#input = <<-EOF
+#Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
+#Valve BB has flow rate=13; tunnels lead to valves CC, AA
+#Valve CC has flow rate=2; tunnels lead to valves DD, BB
+#Valve DD has flow rate=20; tunnels lead to valves CC, AA, EE
+#Valve EE has flow rate=3; tunnels lead to valves FF, DD
+#Valve FF has flow rate=0; tunnels lead to valves EE, GG
+#Valve GG has flow rate=0; tunnels lead to valves FF, HH
+#Valve HH has flow rate=22; tunnel leads to valve GG
+#Valve II has flow rate=0; tunnels lead to valves AA, JJ
+#Valve JJ has flow rate=21; tunnel leads to valve II
+#EOF
 input = input.split("\n")
 
 $valves = {}
@@ -27,6 +27,7 @@ end
 $openable_valves = $valves.select {|k, v| v[:flow_rate] > 0}.keys
 
 # Let's try this FWA algorithm.
+# https://www.programiz.com/dsa/floyd-warshall-algorithm
 # The idea is that we store shortest paths between all openable nodes.
 # Then we optimise only between those moves, reducing the search space.
 
@@ -67,20 +68,11 @@ end.compact.to_h
 
 # And then go through path finding algorithm
 
-
-
-
-
-
-
-
-
-
-
-
 # TODO: Can we refactor into subpaths so that the code is cleaner?
+# TODO: We're definitely checking the same path just swapped me and elephant. Probably a bad idea.
 class Path
-  attr_reader :my_time_remaining, :my_path, :elephant_path, :score, :open_valves
+  attr_reader :my_time_remaining, :elephant_time_remaining, :my_path, :elephant_path, :score, :open_valves
+  attr_reader :previous_paths
 
   def initialize(my_time_remaining:,
                  elephant_time_remaining:,
@@ -89,7 +81,9 @@ class Path
                  elephant_current_node:,
                  my_path:,
                  elephant_path:,
-                 open_valves:)
+                 open_valves:,
+                 previous_paths: []
+                )
     @my_time_remaining = my_time_remaining
     @elephant_time_remaining = elephant_time_remaining
     @score = score
@@ -99,6 +93,18 @@ class Path
     @elephant_path = elephant_path
     # We're using open valves as a hash key. Better make sure they're sorted and don't change.
     @open_valves = open_valves.sort.freeze
+    @previous_paths = previous_paths
+  end
+
+  def pretty_print
+    puts "====== #{self.to_s} ======="
+    puts "My path: #{@my_path.inspect}"
+    puts "My time remaining: #{@my_time_remaining}"
+    puts "Elephant path: #{@elephant_path.inspect}"
+    puts "Elephant time remaining: #{@elephant_time_remaining}"
+
+    puts "Score: #{score}"
+    puts "Open valves: #{@open_valves.inspect}"
   end
 
   def all_valves_open?
@@ -106,18 +112,21 @@ class Path
   end
 
   def find_neighbours(node)
-    #neighbours = $valves[node].fetch(:tunnels).dup
     current_node = $valves[node]
 
     # TODO: we could be smarter about this:
-    # - we could prioritise valves that are closest
-    # - we could add :open as first option
+    # [ ] we could prioritise valves that are closest
+    # [X] we could add :open as first option
     neighbours = $openable_valves - @open_valves - [node]
 
     # Add the option of opening the valve if the current valve adds to the total score
     # and is not yet open
-    neighbours << :open if current_node[:flow_rate] > 0 && !@open_valves.include?(node)
+    neighbours.unshift(:open) if current_node[:flow_rate] > 0 && !@open_valves.include?(node)
     neighbours
+  end
+
+  def min_time_remaining
+    [@my_time_remaining, @elephant_time_remaining].min
   end
 
   # TODO: there's a bug here when we can both move even if one has run out of time
@@ -141,7 +150,7 @@ class Path
 
       # Then, let's modify the values we want to test in the new reality
       # (in this case, move to the new node)
-      my_new_path = @my_path.dup + [my_neighbour]
+      my_new_path = @my_path + [my_neighbour]
       my_new_current_node = my_neighbour
       my_new_time_remaining = @my_time_remaining - ($distances[@my_current_node][my_new_current_node] || 1)
       # We need to make some extra changes if the new reality is opening a valve
@@ -163,24 +172,29 @@ class Path
             @my_path[-1] == @elephant_path[-1]
           next
         end
-        elephant_new_path = @elephant_path.dup + [elephant_neighbour]
+        elephant_new_open_valves = new_open_valves.dup
+        elephant_new_score = new_score
+
+        elephant_new_path = @elephant_path + [elephant_neighbour]
         elephant_new_current_node = elephant_neighbour
         elephant_new_time_remaining = @elephant_time_remaining - ($distances[@elephant_current_node][elephant_new_current_node] || 1)
         if elephant_neighbour == :open
-          new_open_valves << @elephant_current_node
+          elephant_new_open_valves << @elephant_current_node
           elephant_new_current_node = @elephant_current_node
-          new_score += (@elephant_time_remaining - 1) * $valves[@elephant_current_node][:flow_rate]
+          elephant_new_score += (@elephant_time_remaining - 1) * $valves[@elephant_current_node][:flow_rate]
         end
         # Finally let's create this new reality
-        new_path = Path.new(my_time_remaining: @my_time_remaining - $distances[@my_current_node][my_new_current_node],
-                 elephant_time_remaining: @elephant_time_remaining - $distances[@my_current_node][elephant_new_current_node],
-                 score: new_score,
+        new_path = Path.new(my_time_remaining: my_new_time_remaining,
+                 elephant_time_remaining: elephant_new_time_remaining,
+                 score: elephant_new_score,
                  my_current_node: my_new_current_node,
                  elephant_current_node: elephant_new_current_node,
                  my_path: my_new_path,
                  elephant_path: elephant_new_path,
-                 open_valves: new_open_valves)
-        #require 'pry'; binding.pry
+                 open_valves: elephant_new_open_valves,
+                 previous_paths: previous_paths + [self]
+                           )
+        #require 'pry'; binding.pry if my_new_time_remaining <= 0 || elephant_new_time_remaining <= 0
         new_path
       end
     end
@@ -203,7 +217,7 @@ def worth_exploring?(path)
   current_max_score = $max_scores_per_open_valves[path.open_valves] || 0
   return false if path.score < current_max_score
 
-  return false if $max_time_remaining_to_open_valves > path.my_time_remaining
+  return false if $max_time_remaining_to_open_valves > path.min_time_remaining
 
   true
 end
@@ -219,7 +233,6 @@ $openable_valves.size.downto(0) {|i| queues[i] = []}
 seen_paths = {}
 max_score_path = nil
 $max_scores_per_open_valves = {}
-# TODO: does this even make sense any more?
 $max_time_remaining_to_open_valves = 0
 $max_valves_open = 0
 t = Time.now
@@ -259,15 +272,15 @@ loop do
   if end_state?(path)
     # We're in an end state - either all valves are open or we ran out of time.
     # No need to check again.
-    if $max_time_remaining_to_open_valves < path.my_time_remaining
-      $max_time_remaining_to_open_valves = path.my_time_remaining
+    if $max_time_remaining_to_open_valves < path.min_time_remaining
+      $max_time_remaining_to_open_valves = path.min_time_remaining
     end
     if max_score_path.nil? || path.score > max_score_path.score
       max_score_path = path
     end
   end
 
-  if loop_count % 100_000 == 0
+  if loop_count % 50_000 == 0
     puts "#{Time.now.to_s} Loop count: #{loop_count} Time: #{Time.now - t}"
     queue_sizes = queues.map {|i, q| "[#{i}] => #{q.size}"}.join("\n")
     puts "Queue sizes: \n#{queue_sizes}"
