@@ -63,9 +63,10 @@ end
 
 range = Range.new(input)
 max_y = 0
+count = 0
 
-(0 .. range.max_x).each do |x_velocity|
-  (0 .. 1000).each do |y_velocity|
+(-500 .. range.max_x).each do |x_velocity|
+  (-500 .. 5151).each do |y_velocity|
     probe = Probe.new(x_velocity, y_velocity)
 
     loop do
@@ -74,6 +75,7 @@ max_y = 0
         #puts "Hit"
         #puts probe.max_y
         max_y = probe.max_y if max_y < probe.max_y
+        count += 1
         break
       end
       if range.missed?(probe)
@@ -85,3 +87,4 @@ max_y = 0
 end
 
 puts max_y
+puts count
