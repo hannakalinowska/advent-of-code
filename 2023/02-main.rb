@@ -13,6 +13,8 @@ input = input.split("\n")
 BAG = { red: 12, green: 13, blue: 14 }
 
 class Draw
+  attr_reader :blue, :red, :green
+
   def initialize(line)
     line.match(/(\d+) blue/)
     @blue = $1.to_i
@@ -44,11 +46,36 @@ class Game
   def possible?
     @draws.all?(&:possible?)
   end
+
+  def power
+    minimum_cubes.values.reduce(:*)
+  end
+
+  private
+
+  def minimum_cubes
+    return @minimum_cubes if defined?(@minimum_cubes)
+
+    @minimum_cubes = { blue: 0, red: 0, green: 0 }
+    @draws.each do |draw|
+      if draw.blue > @minimum_cubes[:blue]
+        @minimum_cubes[:blue] = draw.blue
+      end
+      if draw.red > @minimum_cubes[:red]
+        @minimum_cubes[:red] = draw.red
+      end
+      if draw.green > @minimum_cubes[:green]
+        @minimum_cubes[:green] = draw.green
+      end
+    end
+
+    @minimum_cubes
+  end
 end
 
-possible = input.map do |line|
+power = input.sum do |line|
   game = Game.new(line)
-  game if game.possible?
-end.compact
+  game.power
+end
 
-puts possible.sum(&:id)
+puts power
