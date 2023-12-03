@@ -17,24 +17,22 @@ input = File.read('03-input.txt')
 #EOF
 input = input.split("\n")
 
-class Part
-  def initialize(symbol:, numbers: [])
-    @symbol = symbol
-    @numbers = numbers
-  end
-end
-
-part_numbers = []
+ratios = []
 
 input.each_with_index do |line, i|
   line.split('').each_with_index do |char, j|
-    if char =~ /[^.\d\n]/
+    if char =~ /\*/
+      part_numbers = []
       part_numbers << Parser.up(i, j, input)
       part_numbers << Parser.down(i, j, input)
       part_numbers << Parser.left(i, j, input)
       part_numbers << Parser.right(i, j, input)
+
+      if part_numbers.flatten.size == 2
+        ratios << part_numbers.flatten.reduce(:*)
+      end
     end
   end
 end
 
-puts part_numbers.flatten.sum
+puts ratios.sum
