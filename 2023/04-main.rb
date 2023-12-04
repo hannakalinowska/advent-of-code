@@ -12,14 +12,28 @@ input = File.read('04-input.txt')
 input = input.split("\n")
 
 total = 0
+CARDS = {}
 
 input.each do |line|
-  line =~ /([\d |]+)$/
-  winning, owned = $1.split("|")
+  line =~ /^Card\s+(\d+): ([\d |]+)$/
+  id = $1.to_i
+  winning, owned = $2.split("|")
   winning = winning.split(" ").map(&:to_i)
   owned = owned.split(" ").map(&:to_i)
-  score = 2 ** ((owned & winning).size - 1)
-  total += score.to_i
+  CARDS[id] = (owned & winning).size
 end
 
-puts total
+list = CARDS.keys
+processed_cards = 0
+loop do
+  card = list.shift
+  processed_cards += 1
+
+  (1 .. CARDS[card]).each do |i|
+    list << card + i
+  end
+
+  break if list.empty?
+end
+
+puts processed_cards
