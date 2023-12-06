@@ -43,7 +43,7 @@ maps = {}
 
 seeds_line = input.shift
 seeds_line =~ /((\d+ ?)+)/
-seeds = $1.split(' ').map(&:to_i)
+seed_numbers = $1.split(' ').map(&:to_i)
 
 input.each do |section|
   definition, *mappings = section.split("\n")
@@ -59,30 +59,41 @@ input.each do |section|
 end
 
 locations = {}
-seeds.each do |seed|
-  source_key = :seed
-  source = seed
+lowest_location = nil
 
-  loop do
-    relevant_maps = maps.select {|k, v| k.first == source_key}
+seed_numbers.each_slice(2).each do |seed_start, length|
+  (seed_start).upto(seed_start + length - 1) do |seed|
+    source_key = :seed
+    source = seed
 
-    relevant_maps.each do |source_pair, destination_pair|
-      source_from, source_to = source_pair[1], source_pair[2]
-      if source_from <= source && source_to >= source
-        # prep for next iteration
-        offset = source - source_from
-        source = destination_pair[1] + offset
-        source_key = destination_pair.first # this will become the source in next iteration
-        break
+    loop do
+      relevant_maps = maps.select {|k, v| k.first == source_key}
+
+      relevant_maps.each do |source_pair, destination_pair|
+        source_from, source_to = source_pair[1], source_pair[2]
+        if source_from <= source && source_to >= source
+          # prep for next iteration
+          offset = source - source_from
+          source = destination_pair[1] + offset
+          source_key = destination_pair.first # this will become the source in next iteration
+          break
+        end
       end
-    end
-    if relevant_maps.empty?
-      locations[seed] = source
-      break
-    else
-      source_key = relevant_maps.first.last.first # this will become the source in next iteration
+      if relevant_maps.empty?
+        #locations[seed] = source
+        if lowest_location.nil?
+          lowest_location = source
+        else
+          if lowest_location > source
+            lowest_location = source
+          end
+        end
+        break
+      else
+        source_key = relevant_maps.first.last.first # this will become the source in next iteration
+      end
     end
   end
 end
 
-puts locations.values.min
+puts lowest_location
