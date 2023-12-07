@@ -20,60 +20,61 @@ class Hand
 
   def rank
     case
-    when five_of_a_kind?
-      7
-    when four_of_a_kind?
-      6
-    when full_house?
-      5
-    when three_of_a_kind?
-      4
-    when two_pair?
-      3
-    when one_pair?
-      2
-    when high_card?
-      1
+    when five_of_a_kind?; 7
+    when four_of_a_kind?;  6
+    when full_house?;  5
+    when three_of_a_kind?; 4
+    when two_pair?; 3
+    when one_pair?; 2
+    when high_card?; 1
     end
   end
 
   private
 
   def five_of_a_kind?
-    @cards.uniq.length == 1
+    lengths == [5]
   end
 
   def four_of_a_kind?
-    @cards.uniq.length == 2 && lengths == [1, 4]
+    lengths == [1, 4]
   end
 
   def full_house?
-    @cards.uniq.length == 2 && lengths == [2, 3]
+    lengths == [2, 3]
   end
 
   def three_of_a_kind?
-    @cards.uniq.length == 3 && lengths == [1, 1, 3]
+    lengths == [1, 1, 3]
   end
 
   def two_pair?
-    @cards.uniq.length == 3 && lengths == [1, 2, 2]
+    lengths == [1, 2, 2]
   end
 
   def one_pair?
-    @cards.uniq.length == 4
+    lengths == [1, 1, 1, 2]
   end
 
   def high_card?
-    @cards.uniq.length == 5
+    lengths == [1, 1, 1, 1, 1]
   end
 
   def lengths
-    @cards.tally.values.sort
+    return @lengths if defined?(@lengths)
+
+    lengths = @cards.tally
+    if lengths['J'] && lengths['J'] < 5
+      jokers = lengths.delete('J')
+      max = lengths.max_by {|l| l.last}
+      lengths[max.first] += jokers
+    end
+    @lengths = lengths.values.sort
   end
 end
 
 def card_sort(a, b)
-  order = %w(A K Q J T 9 8 7 6 5 4 3 2)
+  order = %w(A K Q T 9 8 7 6 5 4 3 2 J)
   if order.find_index(a) > order.find_index(b)
     1
   elsif order.find_index(a) < order.find_index(b)
@@ -84,6 +85,9 @@ def card_sort(a, b)
 end
 
 def camel_sort(a, b)
+  if a.rank.nil? || b.rank.nil?
+    require 'pry'; binding.pry
+  end
   case
   when a.rank < b.rank
     1
