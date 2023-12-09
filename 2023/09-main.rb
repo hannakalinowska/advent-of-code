@@ -28,11 +28,10 @@ input.each do |line|
   end
   # predict next value
   rows.reverse[0 .. -2].each_with_index do |numbers, i|
-    rows[rows.length-i-2] << rows[rows.length-i-2].last + rows[rows.length-i-1].last
+    rows[rows.length-i-2].unshift(rows[rows.length-i-2].first - rows[rows.length-i-1].first)
 
     if rows.length-i-2 == 0
-      extrapolated << rows[0].last
-      puts extrapolated.inspect
+      extrapolated << rows[0].first
     end
   end
 end
