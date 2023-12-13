@@ -1,4 +1,5 @@
 #! /usr/bin/env ruby
+require_relative '12/springs_checker'
 
 input = File.read('12-input.txt')
 #input = <<EOF
@@ -11,6 +12,14 @@ input = File.read('12-input.txt')
 #EOF
 input = input.split("\n").map {|l| l.split(' ')}
 
+# unfold input
+input = input.map do |line, check|
+  [
+    ([line]*5).join('?'),
+    ([check]*5).join(',')
+  ]
+end
+
 queue  = Queue.new
 count = 0
 
@@ -18,34 +27,36 @@ input.each do |line, check|
   queue.push([line, check])
 end
 
-def valid?(line, check)
-  return true if line =~ /\?/
-
-  groups = line.split(/[^#]/).select {|g| g =~ /^#+$/}
-  lengths = groups.map(&:length)
-
-  lengths == check.split(',').map(&:to_i)
-end
-
 loop_count = 0
 loop do
   break if queue.empty?
 
-  puts "[#{loop_count}] Queue: #{queue.size}" if loop_count % 100_000 == 0
+  puts "[#{loop_count}] Queue: #{queue.size} Count: #{count}" if loop_count % 100_000 == 0
   loop_count += 1
 
   line, check = queue.pop
 
   if line =~ /\?/
     new_line = line.sub(/\?/, '.')
-    queue.push([new_line, check]) if valid?(new_line, check)
+    if SpringsChecker.valid?(new_line, check)
+      queue.push([new_line, check])
+    #else
+    #  puts new_line
+    #  require 'pry-byebug'; binding.pry unless new_line =~ /^\.*#\.+#\.+#\.+/
+    end
 
     new_line = line.sub(/\?/, '#')
-    queue.push([new_line, check]) if valid?(new_line, check)
+    if SpringsChecker.valid?(new_line, check)
+      queue.push([new_line, check])
+    #else
+    #  puts new_line
+    #  require 'pry-byebug'; binding.pry unless new_line =~ /^\.*#\.+#\.+#\.+/
+    end
   else
     # finished line
     count += 1
   end
 end
 
+puts "loop count: #{loop_count}"
 puts count
