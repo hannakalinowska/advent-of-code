@@ -6,15 +6,37 @@ input = File.read('15-input.txt')
 #EOF
 input = input.strip.split(',')
 
-total = 0
-input.each do |instruction|
+def hash(string)
   current_value = 0
-  instruction.split('').each do |c|
+  string.split('').each do |c|
     current_value += c.ord
     current_value *= 17
     current_value %= 256
   end
-  total += current_value
+  current_value
 end
 
+boxes = []
+input.each do |instruction|
+  instruction =~ /^(\w+)([=-])(\d+)?/
+
+  label = $1
+  operation = $2
+  focal_length = $3.to_i
+  box = hash(label)
+
+  boxes[box] ||= {}
+  if operation == '='
+    boxes[box][label] = focal_length
+  else
+    boxes[box].delete(label)
+  end
+end
+
+total = 0
+boxes.each_with_index do |box, i|
+  (box || {}).each_with_index do |lens, j|
+    total += (1+i) * (j+1) * lens.last
+  end
+end
 puts total
