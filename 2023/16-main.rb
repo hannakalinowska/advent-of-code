@@ -15,11 +15,6 @@ input = File.read('16-input.txt')
 #EOF
 input = input.split("\n").map {|l| l.split('')}
 
-@queue = Queue.new
-@queue.push([0, 0, :right])
-
-@energised_tiles = Set.new
-@energised_tiles << [0, 0]
 
 def move(row, column, direction, input)
   new_item = false
@@ -41,17 +36,7 @@ def move(row, column, direction, input)
       new_item = [row, column+1, direction]
     end
   end
-
-  if new_item
-    @queue.push(new_item)
-    @energised_tiles << new_item[0..1]
-    puts @energised_tiles.size if rand(1_000_000) == 0
-    #pretty_print(input)
-    #puts
-    #sleep(1)
-  #else
-  #  puts "Out of bounds"
-  end
+  new_item
 end
 
 def pretty_print(input)
@@ -68,63 +53,106 @@ def pretty_print(input)
   nil
 end
 
-loop do
-  row, column, direction = @queue.pop
+def run(row, column, direction, input)
+  @queue = Queue.new
+  @queue.push([row, column, direction])
 
-  case input[row][column]
-  when '/'
-    case direction
-    when :right
-      move(row, column, :up, input)
-    when :up
-      move(row, column, :right, input)
-    when :down
-      move(row, column, :left, input)
-    when :left
-      move(row, column, :down, input)
+  @energised_tiles = Set.new
+  @energised_tiles << [row, column]
+  @visited = Set.new
+  @visited << [row, column, direction]
+
+  loop do
+    row, column, direction = @queue.pop
+
+    new_items = []
+    case input[row][column]
+    when '/'
+      case direction
+      when :right
+        new_items << move(row, column, :up, input)
+      when :up
+        new_items << move(row, column, :right, input)
+      when :down
+        new_items << move(row, column, :left, input)
+      when :left
+        new_items << move(row, column, :down, input)
+      end
+    when '\\'
+      case direction
+      when :right
+        new_items << move(row, column, :down, input)
+      when :up
+        new_items << move(row, column, :left, input)
+      when :down
+        new_items << move(row, column, :right, input)
+      when :left
+        new_items << move(row, column, :up, input)
+      end
+    when '-'
+      case direction
+      when :right
+        new_items << move(row, column, :right, input)
+      when :up
+        new_items << move(row, column, :left, input)
+        new_items << move(row, column, :right, input)
+      when :down
+        new_items << move(row, column, :left, input)
+        new_items << move(row, column, :right, input)
+      when :left
+        new_items << move(row, column, :left, input)
+      end
+    when '|'
+      case direction
+      when :right
+        new_items << move(row, column, :down, input)
+        new_items << move(row, column, :up, input)
+      when :up
+        new_items << move(row, column, :up, input)
+      when :down
+        new_items << move(row, column, :down, input)
+      when :left
+        new_items << move(row, column, :down, input)
+        new_items << move(row, column, :up, input)
+      end
+    else
+      new_items << move(row, column, direction, input)
     end
-  when '\\'
-    case direction
-    when :right
-      move(row, column, :down, input)
-    when :up
-      move(row, column, :left, input)
-    when :down
-      move(row, column, :right, input)
-    when :left
-      move(row, column, :up, input)
+
+    if new_items.any?
+      new_items.each do |new_item|
+        next if new_item == false
+
+        #pretty_print(input)
+        #puts
+        break if @visited.include?(new_item)
+
+        @queue.push(new_item)
+        @visited << new_item
+        @energised_tiles << new_item[0..1]
+      end
     end
-  when '-'
-    case direction
-    when :right
-      move(row, column, :right, input)
-    when :up
-      move(row, column, :left, input)
-      move(row, column, :right, input)
-    when :down
-      move(row, column, :left, input)
-      move(row, column, :right, input)
-    when :left
-      move(row, column, :left, input)
-    end
-  when '|'
-    case direction
-    when :right
-      move(row, column, :down, input)
-      move(row, column, :up, input)
-    when :up
-      move(row, column, :up, input)
-    when :down
-      move(row, column, :down, input)
-    when :left
-      move(row, column, :down, input)
-      move(row, column, :up, input)
-    end
-  else
-    move(row, column, direction, input)
+
+    break if @queue.empty?
   end
-
-  break if @queue.empty?
+  @energised_tiles.size
 end
 
-# TODO: it doesn't actually stop, ever
+all_energised_tiles = []
+(0 .. input.length-1).each do |row|
+  all_energised_tiles << run(row, 0, :right, input)
+end
+
+(0 .. input.length-1).each do |row|
+  all_energised_tiles << run(row, input.first.length-1, :left, input)
+end
+
+(0 .. input.first.length-1).each do |column|
+  all_energised_tiles << run(0, column, :down, input)
+end
+
+(0 .. input.first.length-1).each do |column|
+  all_energised_tiles << run(input.length-1, column, :up, input)
+end
+
+puts all_energised_tiles.max
